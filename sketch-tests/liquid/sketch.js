@@ -106,7 +106,7 @@ function setup() {
   background(0);
   rectMode(CENTER);
   // colorMode(HSB);
-  // filter(BLUR, 20);
+  //filter(BLUR, 20);
 
   //DRAW TEXT
   fill("red");

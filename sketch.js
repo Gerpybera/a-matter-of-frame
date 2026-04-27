@@ -1,43 +1,85 @@
 let canvasWidth = window.innerWidth;
 let canvasHeight = window.innerHeight;
 
+let canvas;
+canvasWidth = 1080;
+canvasHeight = 1080;
+
 let particles = [];
+let liquidLayer;
+
+let data;
+const fontSize = 1000;
+const txt = "A";
+const gridDensity = 20;
+const particleSize = 25;
+const liquidBlur = 5;
+const liquidThreshold = 0.2;
 
 function setup() {
-  createCanvas(canvasWidth, canvasHeight);
-  for (let i = 0; i < 1000; i++) {
-    let posX = random(canvasWidth);
-    let posY = random(canvasHeight);
-    let size = random(5, 20);
-    let color = [random(255), random(255), random(255)];
-    particles.push(new Particle(posX, posY, size, color));
+  frameRate(24);
+  canvas = createCanvas(canvasWidth, canvasHeight);
+  liquidLayer = createGraphics(canvasWidth, canvasHeight);
+
+  //DRAW TEXT
+  drawText();
+
+  //GET TEXT AREA
+  loadPixels();
+  data = [];
+
+  for (y = 0; y < height; y += gridDensity) {
+    for (x = 0; x < width; x += gridDensity) {
+      let temp = canvas.get(x, y);
+
+      //if it's text area, push it to data
+      if (temp[0] == 255) {
+        data.push({
+          x: x,
+          y: y,
+        });
+      }
+    }
+  }
+
+  //DRAW PARTICLES
+
+  for (i = 0; i < data.length; i++) {
+    particles.push(
+      new Particle(data[i].x, data[i].y, particleSize, [255, 255, 255]),
+    );
   }
 }
 
 function draw() {
-  background(0, 255, 0);
-  fill(255);
-  textSize(100);
-  text("I fucking hate those particles!", 10, 100);
+  blendMode(BLEND);
+  clear();
+  background(0);
+
+  liquidLayer.clear();
+  liquidLayer.background(0);
+
   particles.forEach((p) => {
     p.update();
-    p.draw();
+    p.draw(liquidLayer, 255);
   });
+
+  // Blur first, then threshold to fuse nearby circles into a liquid silhouette.
+  liquidLayer.filter(BLUR, liquidBlur);
+  liquidLayer.filter(THRESHOLD, liquidThreshold);
+  image(liquidLayer, 0, 0);
 }
 
-function mousePressed() {
-  particles.forEach((p) => {
-    p.ismousePressed = true;
-  });
-}
-function mouseReleased() {
-  particles.forEach((p) => {
-    p.ismousePressed = false;
-  });
+function drawText() {
+  fill("red");
+  textSize(fontSize);
+  textAlign(CENTER, CENTER);
+  text(txt, width / 2, height / 2 + fontSize * 0.1);
 }
 
 function windowResized() {
-  canvasWidth = window.innerWidth;
-  canvasHeight = window.innerHeight;
+  canvasWidth = 1080;
+  canvasHeight = 1080;
   resizeCanvas(canvasWidth, canvasHeight);
+  liquidLayer = createGraphics(canvasWidth, canvasHeight);
 }
