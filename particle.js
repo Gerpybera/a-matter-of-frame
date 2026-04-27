@@ -2,17 +2,30 @@ class Particle {
   constructor(x, y, size = 10, color = [255, 0, 0]) {
     this.x = x;
     this.y = y;
+    this.targetX = x;
+    this.targetY = y;
 
     this.size = size;
     this.color = color;
-    this.incr = 1;
+    this.incr = random(3, 10);
+    this.ease = random(0.08, 0.16);
     this.opa = random(200, 255);
     this.ismousePressed = false;
   }
+
+  setTarget(x, y) {
+    this.targetX = x;
+    this.targetY = y;
+  }
+
   update() {
-    noStroke();
+    this.x += (this.targetX - this.x) * this.ease;
+    this.y += (this.targetY - this.y) * this.ease;
+
+    // Tiny jitter keeps the liquid edge alive without breaking the letter shape.
     this.x += random(-this.incr, this.incr);
     this.y += random(-this.incr, this.incr);
+
     if (this.ismousePressed) {
       this.goToMouse();
     }
