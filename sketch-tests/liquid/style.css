@@ -1,0 +1,27 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial';
+}
+
+body{
+  overflow: hidden;
+  background: black;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  filter: blur(6px) contrast(20);
+}
+
+p {
+  position: absolute;
+  color: white;
+}
