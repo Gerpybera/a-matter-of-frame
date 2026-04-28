@@ -19,10 +19,17 @@ const particleSize = gridDensity * 0.8;
 const liquidBlur = 25;
 const liquidThreshold = 0.2;
 const letterHoldMs = 800;
+
 let brush;
+let font;
+
+let savedCount = 0;
+const totalSaves = 48 * 3; // 48 frames for 2 seconds at 24 fps
+const framesPerSave = 2;
 
 function preload() {
   brush = loadImage("circle2.png");
+  font = loadFont("./font/SuisseEcalIntlMono.otf");
 }
 
 function setup() {
@@ -55,6 +62,7 @@ function draw() {
   filter(POSTERIZE, 4);
   //filter(BLUR, liquidBlur);
   // filter(THRESHOLD, liquidThreshold);
+  //saveFrames();
 }
 
 function initializeMorphSystem() {
@@ -101,9 +109,14 @@ function getLetterPoints(letter) {
   letterLayer.background(0);
   letterLayer.fill(255);
   letterLayer.noStroke();
+  letterLayer.textFont(font);
   letterLayer.textSize(fontSize);
-  letterLayer.textAlign(CENTER, CENTER);
-  letterLayer.text(letter, width / 2, height / 2 + fontSize * 0.1);
+  // Center glyphs using actual font bounds instead of a fixed Y offset.
+  const bounds = font.textBounds(letter, 0, 0, fontSize);
+  const centeredX = width / 2 - (bounds.x + bounds.w / 2);
+  const centeredY = height / 2 - (bounds.y + bounds.h / 2);
+  letterLayer.textAlign(LEFT, BASELINE);
+  letterLayer.text(letter, centeredX, centeredY);
   letterLayer.loadPixels();
 
   const points = [];
@@ -139,4 +152,15 @@ function windowResized() {
   canvasHeight = 1080;
   resizeCanvas(canvasWidth, canvasHeight);
   initializeMorphSystem();
+}
+
+function saveFrames() {
+  if (savedCount < totalSaves && frameCount % framesPerSave === 0) {
+    saveCanvas(`animation_${nf(savedCount, 3)}`, "png");
+    savedCount++;
+
+    if (savedCount >= totalSaves) {
+      // noLoop();
+    }
+  }
 }
