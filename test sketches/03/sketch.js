@@ -13,30 +13,24 @@ let currentLetterIndex = 0;
 let nextLetterAt = 0;
 
 const fontSize = 1000;
-const txt = "ATKINS";
-const gridDensity = 30;
+const txt = "SOLEIL";
+const gridDensity = 16;
 const particleSize = gridDensity * 0.8;
-const liquidBlur = 25;
+const liquidBlur = 15;
 const liquidThreshold = 0.2;
 const letterHoldMs = 800;
-let brush;
-
-function preload() {
-  brush = loadImage("circle2.png");
-}
 
 function setup() {
   frameRate(24);
   pixelDensity(1);
   canvas = createCanvas(canvasWidth, canvasHeight);
-  //  image(brush, 0, 0);
   initializeMorphSystem();
 }
 
 function draw() {
-  // blendMode(ADD);
-  //clear();
-  background(0, 50);
+  blendMode(ADD);
+  clear();
+  background(0);
 
   if (letters.length > 1 && millis() >= nextLetterAt) {
     currentLetterIndex = (currentLetterIndex + 1) % letters.length;
@@ -52,9 +46,8 @@ function draw() {
     p.draw();
   });
 
-  filter(POSTERIZE, 4);
-  //filter(BLUR, liquidBlur);
-  // filter(THRESHOLD, liquidThreshold);
+  filter(BLUR, liquidBlur);
+  filter(THRESHOLD, liquidThreshold);
 }
 
 function initializeMorphSystem() {
@@ -84,7 +77,7 @@ function initializeMorphSystem() {
       new Particle(
         spawn.x + random(-0.5, 0.5),
         spawn.y + random(-0.5, 0.5),
-        gridDensity * random(1, 2) * random(1, 5),
+        gridDensity * random(1, 2),
         [255, 255, 255],
       ),
     );

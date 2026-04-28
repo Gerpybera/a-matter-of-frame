@@ -10,7 +10,7 @@ class Particle {
     this.incr = random(3, 10);
     this.ease = random(0.08, 0.16);
     this.opa = random(200, 255);
-    this.speed = random(1, 4);
+    this.speed = 4;
     this.ismousePressed = false;
   }
 
@@ -32,14 +32,7 @@ class Particle {
     noStroke();
 
     fill(this.color, this.opa);
-    // ellipse(this.x, this.y, this.size, this.size);
-    image(
-      brush,
-      this.x - this.size / 2,
-      this.y - this.size / 2,
-      this.size,
-      this.size,
-    );
+    ellipse(this.x, this.y, this.size, this.size);
     pop();
   }
 }
