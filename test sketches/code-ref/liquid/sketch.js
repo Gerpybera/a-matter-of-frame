@@ -3,7 +3,7 @@ txt = "Molécule";
 
 fontSize = 450;
 
-gridDensity = 8;
+gridDensity = 25;
 
 mouseRadius = 250;
 
@@ -22,7 +22,7 @@ b = "#0000ff";
 
 class Particle {
   constructor(x, y) {
-    this.x = x + 0; //plus for a distortion effect
+    this.x = x; //plus for a distortion effect
     this.y = y;
     this.posRangeX = canvas.width / 2;
     this.posRangeY = canvas.height / 2;
@@ -39,9 +39,10 @@ class Particle {
     // this.c = random(h, h + range);
     this.c = random([r, g, b]);
     this.c = random(200, 255);
+    this.c = "#ff0000";
     this.opa = random(200, 255);
 
-    this.breathe = random(12, 14);
+    //this.breathe = random(12, 14);
   }
 
   draw() {
@@ -49,11 +50,11 @@ class Particle {
     noStroke();
     //fill(color(255,0,0,50));
     //fill(this.c);
-    fill(255, this.opa);
+    fill(255, 0, 0, this.opa);
     //fill(255, 0 ,0)
     //SHAPES
 
-    circle(this.x, this.y, this.size);
+    circle(this.x, this.y, this.size, this.size);
 
     // this.size += sin(frameCount / 40) / 10;
 
