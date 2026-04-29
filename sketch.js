@@ -1,10 +1,15 @@
-let canvasWidth = 1080;
-let canvasHeight = 1080;
+let canvasWidth = window.innerWidth;
+let canvasHeight = window.innerHeight;
+
+let canvas;
+canvasWidth = 1080;
+canvasHeight = 1080;
 
 let particles = [];
-let maskLayer;
-let shaderLayer;
-let edgeShader;
+let mousePosX;
+let mousePosY;
+let numberOfRanges = 7;
+let ranges = [];
 
 let letterPointSets = [];
 let letters = [];
@@ -12,55 +17,54 @@ let currentLetterIndex = 0;
 let nextLetterAt = 0;
 
 const fontSize = 1000;
-const txt = "SOLEIL";
-const gridDensity = 8;
+const txt = "ATKINS";
+const gridDensity = 30;
 const particleSize = gridDensity * 0.8;
-const liquidBlur = 15;
+const liquidBlur = 25;
 const liquidThreshold = 0.2;
-const letterHoldMs = 1000;
-const transitionSpeed = 0.15;
+const letterHoldMs = 800;
 
-const colorFraction = 1 / 255;
+let brush;
+let font;
 
-const edgeInnerColor = [
-  255 * colorFraction,
-  255 * colorFraction,
-  255 * colorFraction,
-];
-const edgeColor1 = [255 * colorFraction, 0, 255 * colorFraction];
-const edgeColor2 = [0, 255 * colorFraction, 255 * colorFraction];
-const edgeColor3 = [0, 255 * colorFraction, 255 * colorFraction];
-const edgeWidth = gridDensity * 1.5;
-const glowWidth = edgeWidth * 2.5;
+let savedCount = 0;
+const framesPerSave = 2;
+const totalSeconds = 6;
+const totalSaves = (24 / framesPerSave) * totalSeconds; // 48 frames for 2 seconds at 24 fps
 
 function preload() {
-  edgeShader = loadShader("shader.vert", "shader.frag");
+  brush = loadImage("circle2.png");
+  font = loadFont("./font/SuisseEcalIntlMono.otf");
 }
 
 function setup() {
-  pixelDensity(1);
   frameRate(24);
-
-  createCanvas(canvasWidth, canvasHeight);
-
-  maskLayer = createGraphics(canvasWidth, canvasHeight);
-  maskLayer.pixelDensity(1);
-
-  shaderLayer = createGraphics(canvasWidth, canvasHeight, WEBGL);
-  shaderLayer.pixelDensity(1);
-  shaderLayer.noStroke();
-
-  // Ensure the loaded shader is compiled for the shaderLayer's GL context
-  if (edgeShader && typeof edgeShader.copyToContext === "function") {
-    edgeShader = edgeShader.copyToContext(shaderLayer);
+  pixelDensity(1);
+  canvas = createCanvas(canvasWidth, canvasHeight);
+  if (ranges.length < numberOfRanges) {
+    const rangeSpawner = setInterval(() => {
+      if (ranges.length >= numberOfRanges) {
+        clearInterval(rangeSpawner);
+        return;
+      }
+      ranges.push(new Range(random(width), random(height), random(50, 100)));
+    }, 500);
   }
-
+  /*
+  for (let i = 0; i < numberOfRanges; i++) {
+    ranges.push(new Range(random(width), random(height), random(50, 150)));
+  }
+    */
+  //  image(brush, 0, 0);
   initializeMorphSystem();
 }
 
 function draw() {
-  clear();
-  background(0);
+  mousePosX = mouseX;
+  mousePosY = mouseY;
+  // blendMode(ADD);
+  //clear();
+  background(0, 50);
 
   if (letters.length > 1 && millis() >= nextLetterAt) {
     currentLetterIndex = (currentLetterIndex + 1) % letters.length;
@@ -68,49 +72,40 @@ function draw() {
     nextLetterAt = millis() + letterHoldMs;
   }
 
-  buildMask();
-  renderEdgeGradient();
-
-  image(shaderLayer, 0, 0, width, height);
-}
-
-function buildMask() {
-  maskLayer.background(0);
+  clear();
+  background(0);
 
   particles.forEach((p) => {
+    p.isInRange = false;
     p.update();
-    p.draw(maskLayer, 255);
+    for (let r of ranges) {
+      p.detectRange(r.x, r.y, r.range);
+    }
+    p.draw();
   });
 
-  maskLayer.filter(BLUR, liquidBlur);
-  maskLayer.filter(THRESHOLD, liquidThreshold);
-}
-
-function renderEdgeGradient() {
-  shaderLayer.clear();
-  shaderLayer.background(0);
-
-  shaderLayer.shader(edgeShader);
-
-  edgeShader.setUniform("uMask", maskLayer);
-  edgeShader.setUniform("uResolution", [width, height]);
-  edgeShader.setUniform("uInnerColor", edgeInnerColor);
-  edgeShader.setUniform("uEdgeColor1", edgeColor1);
-  edgeShader.setUniform("uEdgeColor2", edgeColor2);
-  edgeShader.setUniform("uEdgeColor3", edgeColor3);
-  edgeShader.setUniform("uEdgeWidth", edgeWidth);
-  edgeShader.setUniform("uGlowWidth", glowWidth);
-
-  shaderLayer.push();
-  shaderLayer.noStroke();
-  shaderLayer.rectMode(CENTER);
-  shaderLayer.rect(0, 0, width, height);
-  shaderLayer.pop();
+  filter(POSTERIZE, 4);
+  push();
+  blendMode(BLEND);
+  stroke(255, 0, 0);
+  noFill();
+  strokeWeight(2);
+  for (let r of ranges) {
+    r.update();
+    //r.draw();
+  }
+  pop();
+  //filter(BLUR, liquidBlur);
+  // filter(THRESHOLD, liquidThreshold);
+  saveFrames();
 }
 
 function initializeMorphSystem() {
   letters = txt.split("").filter((ch) => ch.trim() !== "");
-  if (letters.length === 0) letters = ["A"];
+
+  if (letters.length === 0) {
+    letters = ["A"];
+  }
 
   letterPointSets = letters.map((letter) => getLetterPoints(letter));
 
@@ -122,7 +117,9 @@ function initializeMorphSystem() {
   const firstPoints = letterPointSets[0];
   particles = [];
 
-  if (firstPoints.length === 0 || maxParticleCount === 0) return;
+  if (firstPoints.length === 0 || maxParticleCount === 0) {
+    return;
+  }
 
   for (let i = 0; i < maxParticleCount; i++) {
     const spawn = firstPoints[i % firstPoints.length];
@@ -130,8 +127,8 @@ function initializeMorphSystem() {
       new Particle(
         spawn.x + random(-0.5, 0.5),
         spawn.y + random(-0.5, 0.5),
-        gridDensity * random(0.5, 2),
-        transitionSpeed,
+        gridDensity * random(1, 2) * random(1, 5),
+        [255, 255, 255],
       ),
     );
   }
@@ -147,9 +144,14 @@ function getLetterPoints(letter) {
   letterLayer.background(0);
   letterLayer.fill(255);
   letterLayer.noStroke();
+  letterLayer.textFont(font);
   letterLayer.textSize(fontSize);
-  letterLayer.textAlign(CENTER, CENTER);
-  letterLayer.text(letter, width / 2, height / 2 + fontSize * 0.1);
+  // Center glyphs using actual font bounds instead of a fixed Y offset.
+  const bounds = font.textBounds(letter, 0, 0, fontSize);
+  const centeredX = width / 2 - (bounds.x + bounds.w / 2);
+  const centeredY = height / 2 - (bounds.y + bounds.h / 2);
+  letterLayer.textAlign(LEFT, BASELINE);
+  letterLayer.text(letter, centeredX, centeredY);
   letterLayer.loadPixels();
 
   const points = [];
@@ -168,7 +170,10 @@ function getLetterPoints(letter) {
 
 function assignTargetsForLetter(letterIndex) {
   const points = letterPointSets[letterIndex];
-  if (!points || points.length === 0 || particles.length === 0) return;
+
+  if (!points || points.length === 0 || particles.length === 0) {
+    return;
+  }
 
   const shuffled = shuffle(points.slice());
   for (let i = 0; i < particles.length; i++) {
@@ -181,18 +186,48 @@ function windowResized() {
   canvasWidth = 1080;
   canvasHeight = 1080;
   resizeCanvas(canvasWidth, canvasHeight);
-
-  maskLayer = createGraphics(canvasWidth, canvasHeight);
-  maskLayer.pixelDensity(1);
-
-  shaderLayer = createGraphics(canvasWidth, canvasHeight, WEBGL);
-  shaderLayer.pixelDensity(1);
-  shaderLayer.noStroke();
-
-  // Re-copy shader to the new WEBGL graphics context after resize
-  if (edgeShader && typeof edgeShader.copyToContext === "function") {
-    edgeShader = edgeShader.copyToContext(shaderLayer);
-  }
-
   initializeMorphSystem();
+}
+
+function saveFrames() {
+  if (savedCount < totalSaves && frameCount % framesPerSave === 0) {
+    saveCanvas(`villa_frame_${nf(savedCount, 3)}`, "png");
+    savedCount++;
+
+    if (savedCount >= totalSaves) {
+      // noLoop();
+    }
+  }
+}
+
+class Range {
+  constructor(x, y, range) {
+    this.x = x;
+    this.y = y;
+    this.incrX = random(-10, 10);
+    this.incrY = random(-10, 10);
+    this.range = range;
+  }
+  update(x, y) {
+    this.x += this.incrX;
+    this.y += this.incrY;
+    this.bounce();
+  }
+  bounce() {
+    if (this.x < 0 || this.x > canvasWidth) {
+      this.incrX *= -1;
+    }
+    if (this.y < 0 || this.y > canvasHeight) {
+      this.incrY *= -1;
+    }
+  }
+  draw() {
+    push();
+    blendMode(BLEND);
+    stroke(255, 0, 0);
+    noFill();
+    strokeWeight(2);
+    ellipse(this.x, this.y, this.range * 2);
+    pop();
+  }
 }

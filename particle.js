@@ -1,32 +1,54 @@
 class Particle {
-  constructor(x, y, size = 10, speed = 0.08) {
-    this.x = x;
+  constructor(x, y, size = 10, color = [255, 0, 0]) {
+    this.x = x + 0;
     this.y = y;
-    this.tx = x;
-    this.ty = y;
+    this.targetX = x;
+    this.targetY = y;
+
     this.size = size;
-    this.speed = speed;
-    this.incr = 1;
+    this.color = color;
+    this.incr = random(3, 10);
+    this.ease = random(0.08, 0.16);
     this.opa = random(200, 255);
+    this.speed = random(1, 4);
+    this.ismousePressed = false;
+    this.isInRange = false;
   }
 
   setTarget(x, y) {
-    this.tx = x;
-    this.ty = y;
+    this.targetX = x;
+    this.targetY = y;
   }
 
   update() {
-    this.x +=
-      (this.tx - this.x) * this.speed + random(-this.incr, this.incr) * 0.15;
-    this.y +=
-      (this.ty - this.y) * this.speed + random(-this.incr, this.incr) * 0.15;
-  }
+    this.x += (this.targetX - this.x) * this.ease * this.speed;
+    this.y += (this.targetY - this.y) * this.ease * this.speed;
 
-  draw(target, gray = 255) {
-    target.push();
-    target.noStroke();
-    target.fill(gray, this.opa);
-    target.ellipse(this.x, this.y, this.size, this.size);
-    target.pop();
+    // Tiny jitter keeps the liquid edge alive without breaking the letter shape.
+    this.x += random(-this.incr, this.incr);
+    this.y += random(-this.incr, this.incr);
+  }
+  draw() {
+    push();
+    noStroke();
+
+    fill(this.color, this.opa);
+    // ellipse(this.x, this.y, this.size, this.size);
+    if (!this.isInRange) {
+      image(
+        brush,
+        this.x - this.size / 2,
+        this.y - this.size / 2,
+        this.size,
+        this.size,
+      );
+    }
+    pop();
+  }
+  detectRange(x, y, range) {
+    let d = dist(x, y, this.x, this.y);
+    if (d < range) {
+      this.isInRange = true;
+    }
   }
 }
