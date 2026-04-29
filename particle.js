@@ -10,7 +10,7 @@ class Particle {
     this.incr = random(3, 10);
     this.ease = random(0.08, 0.16);
     this.opa = random(200, 255);
-    this.speed = random(1, 4);
+    this.speed = random(4, 7);
     this.ismousePressed = false;
     this.isInRange = false;
   }

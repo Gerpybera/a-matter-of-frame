@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rotating Building Gradient</title>
+    <style>
+  
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #efefef;
+        font-family: system-ui, sans-serif;
+
+      }
+
+      main {
+        position: absolute;
+        top: 0;
+        display: block;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      canvas {
+        display: block;
+      
+      }
+      .noise {
+        /* background: url('4k-noise.jpg'); */
+        background-size: 512px 512px;
+        /* background-color: #004FDE; */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* opacity: 0.3; */
+        pointer-events: none;
+        mix-blend-mode: color;
+        /* mix-blend-mode: overlay; */
+        z-index: 999;
+      }
+      .text {
+        position: absolute;
+        z-index: 100;
+        display: block;
+        user-select: none;
+        pointer-events: none;
+      }
+      .title  {
+        font-size: 250px;
+        line-height: 0.8;
+        letter-spacing: -0.05em;
+        top: 20px;
+        left: 20px;
+
+      }
+      .subtitle {
+        font-size: 60px;
+        bottom: 20px;
+        left: 20px;
+        line-height: 1;  
+      }
+    </style>
+    <script src="p5.min.js"></script>
+  </head>
+  <body>
+    <script src="./sketch.js"></script>
+    <div class="noise"></div>
+
+
+    <!-- <div class="title text">Google<br>Open<br>Studio</div> -->
+    <!-- <div class="subtitle text">Experiment with creative <br>tools of the future</div> -->
+  </body>
+</html>

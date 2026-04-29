@@ -16,7 +16,7 @@ let letters = [];
 let currentLetterIndex = 0;
 let nextLetterAt = 0;
 
-const fontSize = 1000;
+const fontSize = 1150;
 const txt = "ATKINS";
 const gridDensity = 30;
 const particleSize = gridDensity * 0.8;
@@ -26,40 +26,43 @@ const letterHoldMs = 800;
 
 let brush;
 let font;
+let customFrameCount = 0;
+const rangeSpawnStartFrame = 20;
 
-let savedCount = 0;
-const framesPerSave = 2;
-const totalSeconds = 6;
-const totalSaves = (24 / framesPerSave) * totalSeconds; // 48 frames for 2 seconds at 24 fps
-
+let displayAnimation = false;
 function preload() {
-  brush = loadImage("circle2.png");
+  brush = loadImage("circle3.png");
   font = loadFont("./font/SuisseEcalIntlMono.otf");
 }
 
 function setup() {
-  frameRate(24);
+  if (!displayAnimation) return;
+  frameRate(6);
   pixelDensity(1);
   canvas = createCanvas(canvasWidth, canvasHeight);
   if (ranges.length < numberOfRanges) {
     const rangeSpawner = setInterval(() => {
+      if (customFrameCount < rangeSpawnStartFrame) {
+        return;
+      }
       if (ranges.length >= numberOfRanges) {
         clearInterval(rangeSpawner);
         return;
       }
-      ranges.push(new Range(random(width), random(height), random(50, 100)));
-    }, 500);
+      ranges.push(new Range(random(width), random(height), 0));
+    }, 1000);
   }
   /*
   for (let i = 0; i < numberOfRanges; i++) {
     ranges.push(new Range(random(width), random(height), random(50, 150)));
   }
-    */
+  */
   //  image(brush, 0, 0);
   initializeMorphSystem();
 }
 
 function draw() {
+  if (!displayAnimation) return;
   mousePosX = mouseX;
   mousePosY = mouseY;
   // blendMode(ADD);
@@ -84,7 +87,7 @@ function draw() {
     p.draw();
   });
 
-  filter(POSTERIZE, 4);
+  filter(POSTERIZE, 8);
   push();
   blendMode(BLEND);
   stroke(255, 0, 0);
@@ -95,9 +98,19 @@ function draw() {
     //r.draw();
   }
   pop();
+  /*
+  if(frameCount < 100 ) {
+      save("animation-frame" + nf(frameCount, 4) + ".png");
+  }
+      */
   //filter(BLUR, liquidBlur);
   // filter(THRESHOLD, liquidThreshold);
-  saveFrames();
+  //saveFrames();
+  textSize(24);
+  fill(255);
+  text(customFrameCount, 20, height - 20);
+  text("ATKINS", width - 20 - textWidth("ATKINS"), height - 20);
+  customFrameCount++;
 }
 
 function initializeMorphSystem() {
@@ -127,7 +140,7 @@ function initializeMorphSystem() {
       new Particle(
         spawn.x + random(-0.5, 0.5),
         spawn.y + random(-0.5, 0.5),
-        gridDensity * random(1, 2) * random(1, 5),
+        gridDensity * random(1, 2) * random(2, 7),
         [255, 255, 255],
       ),
     );
@@ -189,28 +202,19 @@ function windowResized() {
   initializeMorphSystem();
 }
 
-function saveFrames() {
-  if (savedCount < totalSaves && frameCount % framesPerSave === 0) {
-    saveCanvas(`villa_frame_${nf(savedCount, 3)}`, "png");
-    savedCount++;
-
-    if (savedCount >= totalSaves) {
-      // noLoop();
-    }
-  }
-}
-
 class Range {
   constructor(x, y, range) {
     this.x = x;
     this.y = y;
     this.incrX = random(-10, 10);
     this.incrY = random(-10, 10);
+    this.incrSize = random(8, 11);
     this.range = range;
   }
   update(x, y) {
     this.x += this.incrX;
     this.y += this.incrY;
+    this.range += this.incrSize;
     this.bounce();
   }
   bounce() {
@@ -229,5 +233,17 @@ class Range {
     strokeWeight(2);
     ellipse(this.x, this.y, this.range * 2);
     pop();
+  }
+}
+
+function keyPressed() {
+  if (key === "q") {
+    displayAnimation = true;
+    setup();
+
+    const capture = P5Capture.getInstance();
+    if (capture) {
+      capture.start();
+    }
   }
 }
