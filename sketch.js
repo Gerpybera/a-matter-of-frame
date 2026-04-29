@@ -29,7 +29,7 @@ let font;
 let customFrameCount = 0;
 const rangeSpawnStartFrame = 20;
 
-let displayAnimation = false;
+let displayAnimation = true;
 function preload() {
   brush = loadImage("circle3.png");
   font = loadFont("./font/SuisseEcalIntlMono.otf");
@@ -109,7 +109,7 @@ function draw() {
   textSize(24);
   fill(255);
   text(customFrameCount, 20, height - 20);
-  text("ATKINS", width - 20 - textWidth("ATKINS"), height - 20);
+  text(txt, width - 20 - textWidth(txt), height - 20);
   customFrameCount++;
 }
 
