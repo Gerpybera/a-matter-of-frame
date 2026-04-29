@@ -6,6 +6,10 @@ canvasWidth = 1080;
 canvasHeight = 1080;
 
 let particles = [];
+let mousePosX;
+let mousePosY;
+let numberOfRanges = 7;
+let ranges = [];
 
 let letterPointSets = [];
 let letters = [];
@@ -24,8 +28,9 @@ let brush;
 let font;
 
 let savedCount = 0;
-const totalSaves = 48 * 3; // 48 frames for 2 seconds at 24 fps
 const framesPerSave = 2;
+const totalSeconds = 6;
+const totalSaves = (24 / framesPerSave) * totalSeconds; // 48 frames for 2 seconds at 24 fps
 
 function preload() {
   brush = loadImage("circle2.png");
@@ -36,11 +41,27 @@ function setup() {
   frameRate(24);
   pixelDensity(1);
   canvas = createCanvas(canvasWidth, canvasHeight);
+  if (ranges.length < numberOfRanges) {
+    const rangeSpawner = setInterval(() => {
+      if (ranges.length >= numberOfRanges) {
+        clearInterval(rangeSpawner);
+        return;
+      }
+      ranges.push(new Range(random(width), random(height), random(50, 100)));
+    }, 500);
+  }
+  /*
+  for (let i = 0; i < numberOfRanges; i++) {
+    ranges.push(new Range(random(width), random(height), random(50, 150)));
+  }
+    */
   //  image(brush, 0, 0);
   initializeMorphSystem();
 }
 
 function draw() {
+  mousePosX = mouseX;
+  mousePosY = mouseY;
   // blendMode(ADD);
   //clear();
   background(0, 50);
@@ -55,14 +76,28 @@ function draw() {
   background(0);
 
   particles.forEach((p) => {
+    p.isInRange = false;
     p.update();
+    for (let r of ranges) {
+      p.detectRange(r.x, r.y, r.range);
+    }
     p.draw();
   });
 
   filter(POSTERIZE, 4);
+  push();
+  blendMode(BLEND);
+  stroke(255, 0, 0);
+  noFill();
+  strokeWeight(2);
+  for (let r of ranges) {
+    r.update();
+    //r.draw();
+  }
+  pop();
   //filter(BLUR, liquidBlur);
   // filter(THRESHOLD, liquidThreshold);
-  //saveFrames();
+  saveFrames();
 }
 
 function initializeMorphSystem() {
@@ -156,11 +191,43 @@ function windowResized() {
 
 function saveFrames() {
   if (savedCount < totalSaves && frameCount % framesPerSave === 0) {
-    saveCanvas(`animation_${nf(savedCount, 3)}`, "png");
+    saveCanvas(`villa_frame_${nf(savedCount, 3)}`, "png");
     savedCount++;
 
     if (savedCount >= totalSaves) {
       // noLoop();
     }
+  }
+}
+
+class Range {
+  constructor(x, y, range) {
+    this.x = x;
+    this.y = y;
+    this.incrX = random(-10, 10);
+    this.incrY = random(-10, 10);
+    this.range = range;
+  }
+  update(x, y) {
+    this.x += this.incrX;
+    this.y += this.incrY;
+    this.bounce();
+  }
+  bounce() {
+    if (this.x < 0 || this.x > canvasWidth) {
+      this.incrX *= -1;
+    }
+    if (this.y < 0 || this.y > canvasHeight) {
+      this.incrY *= -1;
+    }
+  }
+  draw() {
+    push();
+    blendMode(BLEND);
+    stroke(255, 0, 0);
+    noFill();
+    strokeWeight(2);
+    ellipse(this.x, this.y, this.range * 2);
+    pop();
   }
 }

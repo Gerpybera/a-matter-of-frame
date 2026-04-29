@@ -12,6 +12,7 @@ class Particle {
     this.opa = random(200, 255);
     this.speed = random(1, 4);
     this.ismousePressed = false;
+    this.isInRange = false;
   }
 
   setTarget(x, y) {
@@ -33,13 +34,21 @@ class Particle {
 
     fill(this.color, this.opa);
     // ellipse(this.x, this.y, this.size, this.size);
-    image(
-      brush,
-      this.x - this.size / 2,
-      this.y - this.size / 2,
-      this.size,
-      this.size,
-    );
+    if (!this.isInRange) {
+      image(
+        brush,
+        this.x - this.size / 2,
+        this.y - this.size / 2,
+        this.size,
+        this.size,
+      );
+    }
     pop();
+  }
+  detectRange(x, y, range) {
+    let d = dist(x, y, this.x, this.y);
+    if (d < range) {
+      this.isInRange = true;
+    }
   }
 }
