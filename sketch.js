@@ -24,7 +24,7 @@ const gridDensity = 30;
 const particleSize = gridDensity * 0.8;
 const liquidBlur = 25;
 const liquidThreshold = 0.2;
-const letterHoldMs = 800;
+const letterHoldMs = 400;
 
 let brush;
 let font;
@@ -40,7 +40,7 @@ function preload() {
 
 function setup() {
   if (!displayAnimation) return;
-  frameRate(6);
+  frameRate(12);
   pixelDensity(1);
   canvas = createCanvas(canvasWidth, canvasHeight);
   startRangeSpawner();
