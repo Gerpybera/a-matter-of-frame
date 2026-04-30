@@ -1,5 +1,5 @@
-const txt = "ATKINS";
-const rangeSpawnStartFrame = 20;
+let txt = "ATKINS";
+let rangeSpawnStartFrame = 20;
 
 let canvasWidth = window.innerWidth;
 let canvasHeight = window.innerHeight;
@@ -31,6 +31,8 @@ let font;
 let customFrameCount = 0;
 let rangeSpawner = null;
 let allInRangeSince = null;
+let txtInput;
+let rangeSpawnStartFrameInput;
 
 let displayAnimation = true;
 function preload() {
@@ -43,9 +45,43 @@ function setup() {
   frameRate(12);
   pixelDensity(1);
   canvas = createCanvas(canvasWidth, canvasHeight);
+  setupControls();
   startRangeSpawner();
   //  image(brush, 0, 0);
   initializeMorphSystem();
+}
+
+function setupControls() {
+  if (txtInput || rangeSpawnStartFrameInput) {
+    return;
+  }
+
+  txtInput = select("#txt-input");
+  rangeSpawnStartFrameInput = select("#range-start-input");
+
+  if (txtInput) {
+    txtInput.value(txt);
+    txtInput.input(applyControlValues);
+  }
+
+  if (rangeSpawnStartFrameInput) {
+    rangeSpawnStartFrameInput.value(rangeSpawnStartFrame);
+    rangeSpawnStartFrameInput.input(applyControlValues);
+  }
+}
+
+function applyControlValues() {
+  const nextTxt = txtInput ? txtInput.value().trim() : txt;
+  const parsedRangeStart = rangeSpawnStartFrameInput
+    ? int(rangeSpawnStartFrameInput.value())
+    : rangeSpawnStartFrame;
+
+  txt = nextTxt.length > 0 ? nextTxt : "A";
+  rangeSpawnStartFrame = Number.isFinite(parsedRangeStart)
+    ? max(0, parsedRangeStart)
+    : 0;
+
+  resetAnimation();
 }
 
 function startRangeSpawner() {
