@@ -1,6 +1,3 @@
-const txt = "ATKINS";
-const rangeSpawnStartFrame = 20;
-
 let canvasWidth = window.innerWidth;
 let canvasHeight = window.innerHeight;
 
@@ -20,6 +17,7 @@ let currentLetterIndex = 0;
 let nextLetterAt = 0;
 
 const fontSize = 1150;
+const txt = "ATKINS";
 const gridDensity = 30;
 const particleSize = gridDensity * 0.8;
 const liquidBlur = 25;
@@ -29,8 +27,7 @@ const letterHoldMs = 800;
 let brush;
 let font;
 let customFrameCount = 0;
-let rangeSpawner = null;
-let allInRangeSince = null;
+const rangeSpawnStartFrame = 20;
 
 let displayAnimation = true;
 function preload() {
@@ -43,27 +40,25 @@ function setup() {
   frameRate(6);
   pixelDensity(1);
   canvas = createCanvas(canvasWidth, canvasHeight);
-  startRangeSpawner();
+  if (ranges.length < numberOfRanges) {
+    const rangeSpawner = setInterval(() => {
+      if (customFrameCount < rangeSpawnStartFrame) {
+        return;
+      }
+      if (ranges.length >= numberOfRanges) {
+        clearInterval(rangeSpawner);
+        return;
+      }
+      ranges.push(new Range(random(width), random(height), 0));
+    }, 1000);
+  }
+  /*
+  for (let i = 0; i < numberOfRanges; i++) {
+    ranges.push(new Range(random(width), random(height), random(50, 150)));
+  }
+  */
   //  image(brush, 0, 0);
   initializeMorphSystem();
-}
-
-function startRangeSpawner() {
-  if (rangeSpawner) {
-    clearInterval(rangeSpawner);
-  }
-
-  rangeSpawner = setInterval(() => {
-    if (customFrameCount < rangeSpawnStartFrame) {
-      return;
-    }
-    if (ranges.length >= numberOfRanges) {
-      clearInterval(rangeSpawner);
-      rangeSpawner = null;
-      return;
-    }
-    ranges.push(new Range(random(width), random(height), 0));
-  }, 1000);
 }
 
 function draw() {
@@ -92,20 +87,6 @@ function draw() {
     p.draw();
   });
 
-  if (
-    particles.length > 0 &&
-    particles.every((particle) => particle.isInRange)
-  ) {
-    if (allInRangeSince === null) {
-      allInRangeSince = millis();
-    } else if (millis() - allInRangeSince >= 1000) {
-      resetAnimation();
-      return;
-    }
-  } else {
-    allInRangeSince = null;
-  }
-
   filter(POSTERIZE, 8);
   push();
   blendMode(BLEND);
@@ -129,17 +110,10 @@ function draw() {
   fill(255);
   text(customFrameCount, 20, height - 20);
   text(txt, width - 20 - textWidth(txt), height - 20);
-  push();
-  noFill();
-  stroke(255);
-  strokeWeight(1);
-  rect(0, 0, width, height);
-  pop();
   customFrameCount++;
 }
 
 function initializeMorphSystem() {
-  allInRangeSince = null;
   letters = txt.split("").filter((ch) => ch.trim() !== "");
 
   if (letters.length === 0) {
@@ -175,16 +149,6 @@ function initializeMorphSystem() {
   currentLetterIndex = 0;
   assignTargetsForLetter(currentLetterIndex);
   nextLetterAt = millis() + letterHoldMs;
-}
-
-function resetAnimation() {
-  ranges = [];
-  customFrameCount = 0;
-  currentLetterIndex = 0;
-  nextLetterAt = 0;
-  allInRangeSince = null;
-  startRangeSpawner();
-  initializeMorphSystem();
 }
 
 function getLetterPoints(letter) {
@@ -275,7 +239,7 @@ class Range {
 function keyPressed() {
   if (key === "q") {
     displayAnimation = true;
-    resetAnimation();
+    setup();
 
     const capture = P5Capture.getInstance();
     if (capture) {
